@@ -1,12 +1,13 @@
-import { Text, View } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { SafeAreaView } from "react-native-safe-area-context";
 import "./global.css";
+import AppNavigator from "./src/navigation/AppNavigator";
 
 export default function App() {
   return (
-    <View className="flex-1 items-center justify-center bg-white">
-      <Text className="text-blue-600 text-2xl font-bold">
-        Tailwind funcionando! 🎉
-      </Text>
-    </View>
+    <SafeAreaView className="flex-1 bg-white">
+      <AppNavigator />
+      <StatusBar style="auto" />
+    </SafeAreaView>
   );
 }
