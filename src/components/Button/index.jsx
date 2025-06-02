@@ -2,9 +2,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { Text, TouchableOpacity } from "react-native";
 
 const COLORS = {
-  Primary: "bg-yellow-400",
-  Secondary: "bg-white border border-gray-300",
-  Danger: "bg-blue-600",
+  Primary: "bg-primary", // Verde escuro
+  Secondary: "bg-white border border-gray-300", // Branco com borda cinza
+  Danger: "bg-alert", // Vermelho alerta
+  Warning: "bg-warning", // Amarelo aviso
+  Info: "bg-info", // Azul informativo
 };
 
 export default function Button({
@@ -18,12 +20,7 @@ export default function Button({
     fullWidth ? "w-full" : ""
   } ${COLORS[type] || COLORS.Primary}`;
 
-  const textColor =
-    type === "Secondary"
-      ? "text-black"
-      : type === "Danger"
-      ? "text-white"
-      : "text-black";
+  const textColor = type === "Secondary" ? "text-black" : "text-white";
 
   return (
     <TouchableOpacity onPress={onPress} className={baseClass}>
