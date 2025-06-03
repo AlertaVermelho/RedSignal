@@ -30,8 +30,22 @@ export default function RegisterScreen() {
       Alert.alert("Sucesso", "Cadastro realizado com sucesso!");
       navigation.replace("Login");
     } catch (error) {
-      console.error(error);
-      Alert.alert("Erro", "Não foi possível realizar o cadastro.");
+      if (error.response && error.response.data) {
+        const data = error.response.data;
+
+        // Caso seja um erro de validação (lista de erros)
+        if (data.errors && Array.isArray(data.errors)) {
+          const mensagens = data.errors.map((err) => err.message).join("\n");
+          Alert.alert("Erro de validação", mensagens);
+        } else if (data.message) {
+          // Caso seja erro com mensagem única (ex: email já cadastrado)
+          Alert.alert("Erro", data.message);
+        } else {
+          Alert.alert("Erro", "Erro desconhecido ao registrar.");
+        }
+      } else {
+        Alert.alert("Erro", "Erro de conexão com o servidor.");
+      }
     } finally {
       setLoading(false);
     }
