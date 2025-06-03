@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import Button from "../../components/Button";
-import { login } from "../../services/javaApi";
+import { login } from "../../screens/auth/services/authService";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -66,8 +66,8 @@ export default function LoginScreen() {
       />
 
       {loading ? (
-        <View className="w-full mb-4 py-3 rounded-full bg-yellow-400">
-          <ActivityIndicator color="#000" />
+        <View className="w-full mb-4 py-3 rounded-full bg-primary">
+          <ActivityIndicator color="#FFF" />
         </View>
       ) : (
         <Button
