@@ -1,32 +1,43 @@
+import { API_CSHARP_URL } from "@env";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
-const csharpApi = axios.create({
-  baseURL: "http://localhost:5001", // Altere para sua URL real
+const apiCSharp = axios.create({
+  baseURL: API_CSHARP_URL,
 });
 
-csharpApi.interceptors.request.use(async (config) => {
-  const token = await AsyncStorage.getItem("jwtToken");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+apiCSharp.interceptors.request.use(
+  async (config) => {
+    const token = await AsyncStorage.getItem("jwtToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-// Locais Monitorados
-export const createLocation = (userId, location) =>
-  csharpApi.post(`/api/v1/users/${userId}/monitored-locations`, location);
+// Listar locais monitorados de um usuário
+export const getMonitoredLocations = (userId) =>
+  apiCSharp.get(`/api/v1/users/${userId}/monitored-locations`);
 
-export const listLocations = (userId) =>
-  csharpApi.get(`/api/v1/users/${userId}/monitored-locations`);
+// Cadastrar novo local monitorado
+export const createMonitoredLocation = (userId, locationData) =>
+  apiCSharp.post(`/api/v1/users/${userId}/monitored-locations`, locationData);
 
-export const updateLocation = (userId, locationId, data) =>
-  csharpApi.put(
+// Obter detalhes de um local monitorado específico
+export const getMonitoredLocationById = (userId, locationId) =>
+  apiCSharp.get(`/api/v1/users/${userId}/monitored-locations/${locationId}`);
+
+// Atualizar local monitorado
+export const updateMonitoredLocation = (userId, locationId, locationData) =>
+  apiCSharp.put(
     `/api/v1/users/${userId}/monitored-locations/${locationId}`,
-    data
+    locationData
   );
 
-export const deleteLocation = (userId, locationId) =>
-  csharpApi.delete(`/api/v1/users/${userId}/monitored-locations/${locationId}`);
+// Deletar local monitorado
+export const deleteMonitoredLocation = (userId, locationId) =>
+  apiCSharp.delete(`/api/v1/users/${userId}/monitored-locations/${locationId}`);
 
-export default csharpApi;
+export default apiCSharp;
