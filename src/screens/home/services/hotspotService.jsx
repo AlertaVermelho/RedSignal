@@ -1,4 +1,4 @@
-import apiJava from "../services/javaApi";
+import apiJava from "../../../services/javaApi";
 
 export const listarHotspots = () => apiJava.get("/alerts");
 

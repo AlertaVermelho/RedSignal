@@ -2,8 +2,8 @@ import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import { Alert, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
-import Button from "../components/Button";
-import { listarHotspots } from "./hotspotService";
+import Button from "../../components/Button";
+import { listarHotspots } from "./services/hotspotService";
 
 export default function HomeScreen() {
   const navigation = useNavigation();

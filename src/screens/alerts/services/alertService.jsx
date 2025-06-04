@@ -1,4 +1,4 @@
-import apiJava from "./apiJava";
+import apiJava from "../../../services/javaApi";
 
 export const createAlert = (alertData) => apiJava.post("/alerts", alertData);
 
