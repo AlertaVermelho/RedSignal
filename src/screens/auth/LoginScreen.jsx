@@ -36,7 +36,6 @@ export default function LoginScreen() {
 
       navigation.replace("Home");
     } catch (error) {
-      console.error(error);
       Alert.alert("Erro ao entrar", "Verifique suas credenciais.");
     } finally {
       setLoading(false);

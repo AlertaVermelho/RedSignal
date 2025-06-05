@@ -1,76 +1,113 @@
-import { useNavigation } from "@react-navigation/native";
-import { useEffect, useState } from "react";
-import { Alert, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import MapView, { Marker } from "react-native-maps";
-import Button from "../../components/Button";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import * as Location from "expo-location";
 import { listarHotspots } from "./services/hotspotService";
 
 export default function HomeScreen() {
-  const navigation = useNavigation();
   const [hotspots, setHotspots] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const mapRef = useRef(null);
+  const navigation = useNavigation();
 
   useEffect(() => {
-    const carregarHotspots = async () => {
+    let isMounted = true;
+
+    const fetchHotspots = async () => {
       try {
-        const response = await listarHotspots();
-        const dados = response.data?.content || [];
-        setHotspots(dados);
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert("Permissão negada", "A localização é necessária.");
+          return;
+        }
+
+        const loc = await Location.getCurrentPositionAsync({});
+        const { latitude, longitude } = loc.coords;
+
+        const response = await listarHotspots({
+          currentLat: latitude,
+          currentLon: longitude,
+          radiusKm: 5, // ou outro raio desejado
+        });
+
+        if (isMounted) {
+          const dados = Array.isArray(response.data?.hotspots)
+            ? response.data.hotspots
+            : [];
+          setHotspots(dados);
+
+          // Centraliza o mapa na localização atual
+          mapRef.current?.animateToRegion({
+            latitude,
+            longitude,
+            latitudeDelta: 0.1,
+            longitudeDelta: 0.1,
+          });
+        }
       } catch (error) {
         console.error("Erro ao buscar hotspots:", error);
-        Alert.alert("Erro", "Não foi possível carregar os alertas do mapa.");
+        if (isMounted) {
+          Alert.alert("Erro", "Não foi possível carregar os hotspots.");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    carregarHotspots();
+    fetchHotspots();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
     <View className="flex-1">
-      <MapView
-        style={{ flex: 1 }}
-        initialRegion={{
-          latitude: -23.559616,
-          longitude: -46.652201,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        }}
-      >
-        {hotspots.map((item) => (
-          <Marker
-            key={item.alertId}
-            coordinate={{
-              latitude: item.latitude,
-              longitude: item.longitude,
-            }}
-            title={item.tipoIA}
-            description={item.descricaoTexto}
-          />
-        ))}
-      </MapView>
+      {loading ? (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#00aa00" />
+          <Text className="mt-4 text-gray-500">Carregando mapa...</Text>
+        </View>
+      ) : (
+        <MapView
+          ref={mapRef}
+          style={{ flex: 1 }}
+          initialRegion={{
+            latitude: -23.55,
+            longitude: -46.63,
+            latitudeDelta: 0.1,
+            longitudeDelta: 0.1,
+          }}
+        >
+          {hotspots.map((hotspot) => (
+            <Marker
+              key={hotspot.hotspotId}
+              coordinate={{
+                latitude: hotspot.centroidLat,
+                longitude: hotspot.centroidLon,
+              }}
+              title={hotspot.dominantType}
+              description={hotspot.publicSummary}
+            />
+          ))}
+        </MapView>
+      )}
 
-      <View className="absolute bottom-6 left-0 right-0 px-4 space-y-3">
-        <Button
-          text="Criar novo alerta"
-          onPress={() => navigation.navigate("CriarAlerta")}
-          icon="add-circle-outline"
-          type="Primary"
-          fullWidth
-        />
-        <Button
-          text="Histórico de alertas"
-          onPress={() => navigation.navigate("HistoricoAlertas")}
-          icon="time-outline"
-          type="Secondary"
-          fullWidth
-        />
-        <Button
-          text="Locais Favoritos"
-          onPress={() => navigation.navigate("Favoritos")}
-          icon="heart-outline"
-          type="Secondary"
-          fullWidth
-        />
-      </View>
+      <TouchableOpacity
+        onPress={() => navigation.navigate("CriarAlerta")}
+        className="absolute bottom-6 right-6 bg-green-600 p-4 rounded-full shadow-lg"
+      >
+        <Ionicons name="add" size={28} color="#FFF" />
+      </TouchableOpacity>
     </View>
   );
 }
