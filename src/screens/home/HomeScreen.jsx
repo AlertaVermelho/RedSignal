@@ -1,15 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import * as Location from "expo-location";
+import { useCallback, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
-import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import * as Location from "expo-location";
 import { listarHotspots } from "./services/hotspotService";
 
 export default function HomeScreen() {
@@ -18,57 +18,59 @@ export default function HomeScreen() {
   const mapRef = useRef(null);
   const navigation = useNavigation();
 
-  useEffect(() => {
-    let isMounted = true;
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
 
-    const fetchHotspots = async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          Alert.alert("Permissão negada", "A localização é necessária.");
-          return;
-        }
+      const fetchHotspots = async () => {
+        try {
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (status !== "granted") {
+            Alert.alert("Permissão negada", "A localização é necessária.");
+            return;
+          }
 
-        const loc = await Location.getCurrentPositionAsync({});
-        const { latitude, longitude } = loc.coords;
+          const loc = await Location.getCurrentPositionAsync({});
+          const { latitude, longitude } = loc.coords;
 
-        const response = await listarHotspots({
-          currentLat: latitude,
-          currentLon: longitude,
-          radiusKm: 5, // ou outro raio desejado
-        });
-
-        if (isMounted) {
-          const dados = Array.isArray(response.data?.hotspots)
-            ? response.data.hotspots
-            : [];
-          setHotspots(dados);
-
-          // Centraliza o mapa na localização atual
-          mapRef.current?.animateToRegion({
-            latitude,
-            longitude,
-            latitudeDelta: 0.1,
-            longitudeDelta: 0.1,
+          const response = await listarHotspots({
+            currentLat: latitude,
+            currentLon: longitude,
+            radiusKm: 5,
           });
-        }
-      } catch (error) {
-        console.error("Erro ao buscar hotspots:", error);
-        if (isMounted) {
-          Alert.alert("Erro", "Não foi possível carregar os hotspots.");
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
 
-    fetchHotspots();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+          if (isMounted) {
+            const dados = Array.isArray(response.data?.hotspots)
+              ? response.data.hotspots
+              : [];
+            setHotspots(dados);
+
+            mapRef.current?.animateToRegion({
+              latitude,
+              longitude,
+              latitudeDelta: 0.1,
+              longitudeDelta: 0.1,
+            });
+          }
+        } catch (error) {
+          console.error("Erro ao buscar hotspots:", error);
+          if (isMounted) {
+            Alert.alert("Erro", "Não foi possível carregar os hotspots.");
+          }
+        } finally {
+          if (isMounted) {
+            setLoading(false);
+          }
+        }
+      };
+
+      fetchHotspots();
+
+      return () => {
+        isMounted = false;
+      };
+    }, [])
+  );
 
   return (
     <View className="flex-1">
