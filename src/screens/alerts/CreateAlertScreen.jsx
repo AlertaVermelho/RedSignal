@@ -14,37 +14,43 @@ import { useNavigation } from "@react-navigation/native";
 export default function CreateAlertScreen() {
   const [descricao, setDescricao] = useState("");
   const [location, setLocation] = useState(null);
-
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
 
   useEffect(() => {
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          "Permissão negada",
-          "Localização é necessária para criar um alerta."
-        );
-        return;
-      }
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert("Permissão negada", "A localização é necessária.");
+          return;
+        }
 
-      const loc = await Location.getCurrentPositionAsync({});
-      setLocation({
-        latitude: loc.coords.latitude,
-        longitude: loc.coords.longitude,
-      });
+        const { coords } = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Highest,
+        });
+
+        setLocation({
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+        });
+
+        console.log("📍 Localização real:", coords);
+      } catch (error) {
+        console.error("Erro ao obter localização:", error);
+        Alert.alert("Erro", "Não foi possível obter a localização.");
+      }
     })();
   }, []);
 
   const handleSubmit = async () => {
     if (!descricao.trim()) {
-      Alert.alert("Erro", "Por favor, preencha a descrição.");
+      Alert.alert("Erro", "Preencha a descrição do alerta.");
       return;
     }
 
     if (!location) {
-      Alert.alert("Erro", "Localização ainda não carregada.");
+      Alert.alert("Aguarde", "A localização ainda não foi carregada.");
       return;
     }
 
@@ -57,12 +63,18 @@ export default function CreateAlertScreen() {
 
     try {
       setLoading(true);
-      await createAlert(payload);
+      const response = await createAlert(payload);
+
+      console.log("🔔 Alerta criado:", response.data);
+
       Alert.alert("Sucesso", "Alerta criado com sucesso!");
       navigation.navigate("Home");
     } catch (error) {
-      console.error(error);
-      Alert.alert("Erro", "Erro ao criar alerta.");
+      console.error(
+        "❌ Erro ao criar alerta:",
+        error?.response?.data || error.message
+      );
+      Alert.alert("Erro", "Falha ao criar o alerta.");
     } finally {
       setLoading(false);
     }
@@ -79,7 +91,7 @@ export default function CreateAlertScreen() {
 
       <TextInput
         placeholder="Descreva o que está acontecendo (máx 50 caracteres)"
-        maxLength={100}
+        maxLength={50}
         className="w-full border border-gray-300 rounded-md p-3 mb-6"
         value={descricao}
         onChangeText={setDescricao}

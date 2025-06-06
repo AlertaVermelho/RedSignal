@@ -11,10 +11,13 @@ import {
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { listarHotspots } from "./services/hotspotService";
+import { listAlerts } from "../alerts/services/alertService";
 
 export default function HomeScreen() {
   const [hotspots, setHotspots] = useState([]);
+  const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [region, setRegion] = useState(null);
   const mapRef = useRef(null);
   const navigation = useNavigation();
 
@@ -22,7 +25,7 @@ export default function HomeScreen() {
     useCallback(() => {
       let isMounted = true;
 
-      const fetchHotspots = async () => {
+      const fetchData = async () => {
         try {
           const { status } = await Location.requestForegroundPermissionsAsync();
           if (status !== "granted") {
@@ -30,42 +33,57 @@ export default function HomeScreen() {
             return;
           }
 
-          const loc = await Location.getCurrentPositionAsync({});
-          const { latitude, longitude } = loc.coords;
-
-          const response = await listarHotspots({
-            currentLat: latitude,
-            currentLon: longitude,
-            radiusKm: 5,
+          const loc = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Highest,
           });
 
-          if (isMounted) {
-            const dados = Array.isArray(response.data?.hotspots)
-              ? response.data.hotspots
-              : [];
-            setHotspots(dados);
+          const { latitude, longitude } = loc.coords;
 
-            mapRef.current?.animateToRegion({
+          const [hotspotsRes, alertsRes] = await Promise.all([
+            listarHotspots({
+              currentLat: latitude,
+              currentLon: longitude,
+              radiusKm: 50,
+            }),
+            listAlerts(),
+          ]);
+
+          console.log("🔥 Hotspots recebidos:", hotspotsRes.data?.hotspots);
+          console.log("🟢 Alertas recebidos:", alertsRes.data);
+
+          if (isMounted) {
+            setHotspots(
+              Array.isArray(hotspotsRes.data?.hotspots)
+                ? hotspotsRes.data.hotspots
+                : []
+            );
+            setAlerts(
+              Array.isArray(alertsRes.data?.content)
+                ? alertsRes.data.content
+                : []
+            );
+
+            const newRegion = {
               latitude,
               longitude,
-              latitudeDelta: 0.1,
-              longitudeDelta: 0.1,
-            });
+              latitudeDelta: 0.05,
+              longitudeDelta: 0.05,
+            };
+            setRegion(newRegion);
+            mapRef.current?.animateToRegion(newRegion);
+            console.log("🗺️ Região centralizada:", newRegion);
           }
         } catch (error) {
-          console.error("Erro ao buscar hotspots:", error);
+          console.error("Erro ao carregar dados:", error);
           if (isMounted) {
-            Alert.alert("Erro", "Não foi possível carregar os hotspots.");
+            Alert.alert("Erro", "Não foi possível carregar o mapa.");
           }
         } finally {
-          if (isMounted) {
-            setLoading(false);
-          }
+          if (isMounted) setLoading(false);
         }
       };
 
-      fetchHotspots();
-
+      fetchData();
       return () => {
         isMounted = false;
       };
@@ -74,31 +92,40 @@ export default function HomeScreen() {
 
   return (
     <View className="flex-1">
-      {loading ? (
+      {loading || !region ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#00aa00" />
           <Text className="mt-4 text-gray-500">Carregando mapa...</Text>
         </View>
       ) : (
-        <MapView
-          ref={mapRef}
-          style={{ flex: 1 }}
-          initialRegion={{
-            latitude: -23.55,
-            longitude: -46.63,
-            latitudeDelta: 0.1,
-            longitudeDelta: 0.1,
-          }}
-        >
+        <MapView ref={mapRef} style={{ flex: 1 }} region={region}>
           {hotspots.map((hotspot) => (
             <Marker
-              key={hotspot.hotspotId}
+              key={`hotspot-${hotspot.hotspotId}`}
               coordinate={{
-                latitude: hotspot.centroidLat,
-                longitude: hotspot.centroidLon,
+                latitude: parseFloat(hotspot.centroidLat),
+                longitude: parseFloat(hotspot.centroidLon),
               }}
-              title={hotspot.dominantType}
+              pinColor="red"
+              title={`[HOTSPOT] ${hotspot.dominantType}`}
               description={hotspot.publicSummary}
+            />
+          ))}
+
+          {alerts.map((alerta) => (
+            <Marker
+              key={`alert-${alerta.alertId}`}
+              coordinate={{
+                latitude: alerta.latitude,
+                longitude: alerta.longitude,
+              }}
+              title={`[Alerta] ${alerta.tipoIA || "Manual"}`}
+              description={alerta.descricaoTexto}
+              pinColor={
+                alerta.statusAlerta === "PROCESSADO_CLUSTER_COM_HOTSPOT"
+                  ? "orange"
+                  : "green"
+              }
             />
           ))}
         </MapView>
