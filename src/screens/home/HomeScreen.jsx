@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import * as Location from "expo-location";
-import { useCallback, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -21,74 +21,65 @@ export default function HomeScreen() {
   const mapRef = useRef(null);
   const navigation = useNavigation();
 
-  useFocusEffect(
-    useCallback(() => {
-      let isMounted = true;
+  const fetchData = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permissão negada", "A localização é necessária.");
+        return;
+      }
 
-      const fetchData = async () => {
-        try {
-          const { status } = await Location.requestForegroundPermissionsAsync();
-          if (status !== "granted") {
-            Alert.alert("Permissão negada", "A localização é necessária.");
-            return;
-          }
+      const loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Highest,
+      });
 
-          const loc = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Highest,
-          });
+      const { latitude, longitude } = loc.coords;
 
-          const { latitude, longitude } = loc.coords;
+      const [hotspotsRes, alertsRes] = await Promise.all([
+        listarHotspots({
+          currentLat: latitude,
+          currentLon: longitude,
+          radiusKm: 50,
+          zoomLevel: 40, // ✅ incluído
+        }),
+        listAlerts(),
+      ]);
 
-          const [hotspotsRes, alertsRes] = await Promise.all([
-            listarHotspots({
-              currentLat: latitude,
-              currentLon: longitude,
-              radiusKm: 50,
-            }),
-            listAlerts(),
-          ]);
+      console.log("🔥 Hotspots recebidos:", hotspotsRes.data?.hotspots);
+      console.log("🟢 Alertas recebidos:", alertsRes.data);
 
-          console.log("🔥 Hotspots recebidos:", hotspotsRes.data?.hotspots);
-          console.log("🟢 Alertas recebidos:", alertsRes.data);
+      setHotspots(
+        Array.isArray(hotspotsRes.data?.hotspots)
+          ? hotspotsRes.data.hotspots
+          : []
+      );
+      setAlerts(
+        Array.isArray(alertsRes.data?.content) ? alertsRes.data.content : []
+      );
 
-          if (isMounted) {
-            setHotspots(
-              Array.isArray(hotspotsRes.data?.hotspots)
-                ? hotspotsRes.data.hotspots
-                : []
-            );
-            setAlerts(
-              Array.isArray(alertsRes.data?.content)
-                ? alertsRes.data.content
-                : []
-            );
-
-            const newRegion = {
-              latitude,
-              longitude,
-              latitudeDelta: 0.05,
-              longitudeDelta: 0.05,
-            };
-            setRegion(newRegion);
-            mapRef.current?.animateToRegion(newRegion);
-            console.log("🗺️ Região centralizada:", newRegion);
-          }
-        } catch (error) {
-          console.error("Erro ao carregar dados:", error);
-          if (isMounted) {
-            Alert.alert("Erro", "Não foi possível carregar o mapa.");
-          }
-        } finally {
-          if (isMounted) setLoading(false);
-        }
+      const newRegion = {
+        latitude,
+        longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
       };
+      setRegion(newRegion);
+      mapRef.current?.animateToRegion(newRegion);
+      console.log("🗺️ Região centralizada:", newRegion);
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+      Alert.alert("Erro", "Não foi possível carregar o mapa.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      fetchData();
-      return () => {
-        isMounted = false;
-      };
-    }, [])
-  );
+  // ✅ Recarrega a cada 10 segundos
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <View className="flex-1">
@@ -123,7 +114,7 @@ export default function HomeScreen() {
               description={alerta.descricaoTexto}
               pinColor={
                 alerta.statusAlerta === "PROCESSADO_CLUSTER_COM_HOTSPOT"
-                  ? "orange"
+                  ? "red"
                   : "green"
               }
             />
