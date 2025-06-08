@@ -61,8 +61,8 @@ export default function HomeScreen() {
         const newRegion = {
           latitude,
           longitude,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
+          latitudeDelta: 0.02,
+          longitudeDelta: 0.02,
         };
         setRegion(newRegion);
         mapRef.current?.animateToRegion(newRegion);
