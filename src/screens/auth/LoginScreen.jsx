@@ -34,7 +34,7 @@ export default function LoginScreen() {
       await AsyncStorage.setItem("nome", nome);
       await AsyncStorage.setItem("email", emailRetornado);
 
-      navigation.replace("Home");
+      navigation.replace("MainTabs");
     } catch (error) {
       Alert.alert("Erro ao entrar", "Verifique suas credenciais.");
     } finally {

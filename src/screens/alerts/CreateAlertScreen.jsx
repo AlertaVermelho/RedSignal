@@ -1,15 +1,16 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
+import * as Location from "expo-location";
 import { useEffect, useState } from "react";
 import {
-  Text,
-  TextInput,
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Text,
+  TextInput,
 } from "react-native";
 import Button from "../../components/Button";
-import * as Location from "expo-location";
 import { createAlert } from "./services/alertService";
-import { useNavigation } from "@react-navigation/native";
 
 export default function CreateAlertScreen() {
   const [descricao, setDescricao] = useState("");
@@ -43,6 +44,22 @@ export default function CreateAlertScreen() {
     })();
   }, []);
 
+  const salvarNoHistorico = async (novoAlerta) => {
+    try {
+      const dataExistente = await AsyncStorage.getItem("historicoAlertas");
+      const historicoAtual = dataExistente ? JSON.parse(dataExistente) : [];
+
+      historicoAtual.unshift(novoAlerta); // adiciona no início
+
+      await AsyncStorage.setItem(
+        "historicoAlertas",
+        JSON.stringify(historicoAtual)
+      );
+    } catch (error) {
+      console.error("❌ Erro ao salvar no histórico:", error);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!descricao.trim()) {
       Alert.alert("Erro", "Preencha a descrição do alerta.");
@@ -66,6 +83,9 @@ export default function CreateAlertScreen() {
       const response = await createAlert(payload);
 
       console.log("🔔 Alerta criado:", response.data);
+
+      // ✅ Salvar localmente no histórico
+      await salvarNoHistorico(payload);
 
       Alert.alert("Sucesso", "Alerta criado com sucesso!");
       navigation.navigate("Home");
@@ -91,7 +111,7 @@ export default function CreateAlertScreen() {
 
       <TextInput
         placeholder="Descreva o que está acontecendo (máx 50 caracteres)"
-        maxLength={50}
+        maxLength={100}
         className="w-full border border-gray-300 rounded-md p-3 mb-6"
         value={descricao}
         onChangeText={setDescricao}
