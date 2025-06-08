@@ -29,19 +29,6 @@ export default function HomeScreen() {
     };
   }
 
-  const handleSalvarFavorito = async () => {
-    if (!region) {
-      Alert.alert("Erro", "Localização não disponível ainda.");
-      return;
-    }
-
-    navigation.navigate("Favoritos", {
-      salvarNovo: true,
-      latitude: region.latitude,
-      longitude: region.longitude,
-    });
-  };
-
   useFocusEffect(
     useCallback(() => {
       const fetchData = async () => {
@@ -179,13 +166,6 @@ export default function HomeScreen() {
         className="absolute bottom-6 right-6 bg-green-600 p-4 rounded-full shadow-lg"
       >
         <Ionicons name="add" size={28} color="#FFF" />
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={handleSalvarFavorito}
-        className="absolute bottom-20 right-6 bg-blue-600 p-4 rounded-full shadow-lg"
-      >
-        <Ionicons name="bookmark-outline" size={28} color="#FFF" />
       </TouchableOpacity>
     </View>
   );
