@@ -94,26 +94,6 @@ export default function RegisterScreen() {
         />
       )}
 
-      <Text className="text-gray-400 text-sm my-4">ou</Text>
-
-      <Button
-        text="Cadastrar com o Google"
-        onPress={() => Alert.alert("Google Signup")}
-        icon="logo-google"
-        type="Secondary"
-        fullWidth
-      />
-
-      <View className="h-2" />
-
-      <Button
-        text="Cadastrar com o Facebook"
-        onPress={() => Alert.alert("Facebook Signup")}
-        icon="logo-facebook"
-        type="Secondary"
-        fullWidth
-      />
-
       <View className="mt-6">
         <TouchableOpacity onPress={() => navigation.navigate("Login")}>
           <Text className="text-sm text-gray-500">

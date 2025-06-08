@@ -78,26 +78,6 @@ export default function LoginScreen() {
         />
       )}
 
-      <Text className="text-gray-400 text-sm my-4">ou</Text>
-
-      <Button
-        text="Continue com o Google"
-        onPress={() => Alert.alert("Google Login")}
-        icon="logo-google"
-        type="Secondary"
-        fullWidth
-      />
-
-      <View className="h-2" />
-
-      <Button
-        text="Continue com o Facebook"
-        onPress={() => Alert.alert("Facebook Login")}
-        icon="logo-facebook"
-        type="Secondary"
-        fullWidth
-      />
-
       <View className="mt-6">
         <TouchableOpacity onPress={() => navigation.navigate("Register")}>
           <Text className="text-sm text-gray-500">
