@@ -16,7 +16,7 @@ Funcionalidades principais:
 
 ## 🎥 Vídeo de Demonstração
 
-🔗 [Clique aqui para assistir à apresentação do app](https://www.youtube.com/watch?v=SEU_LINK_AQUI)
+🔗 [Clique aqui para assistir à apresentação do app](https://www.youtube.com/watch?v=DieKegRt6ao)
 
 ## 👥Desenvolvedores
 
@@ -33,7 +33,6 @@ Funcionalidades principais:
 - **React Navigation**
 - **Expo Location**
 - **API Java Spring Boot** (Hotspots e Alertas)
-- **API C# .NET** (Locais Favoritos)
 - **Expo Go (para testes em dispositivos reais)**
 
 ---
