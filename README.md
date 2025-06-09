@@ -82,6 +82,25 @@ Para que o app funcione corretamente em emuladores, é necessário configurar um
 
 Sem isso, o app pode não carregar o mapa ou os alertas corretamente.
 
+### Como funcionam os Hotspots (atenção professor!)
+
+Durante os testes, percebemos que a **IA pode invalidar hotspots anteriores** dependendo da localização e tempo de envio de novos alertas.
+
+### 📍 Exemplo real:
+
+> Criamos diversos alertas próximos entre si e um hotspot foi formado.  
+> Porém, ao criarmos um alerta isolado em outro ponto, a IA **removeu os anteriores do agrupamento**, entendendo que **não eram mais relevantes para um cluster**.
+
+✅ **Recomendação para testar:**
+
+- Crie de **3 a 5 alertas seguidos** próximos (em tempo e local).
+- Acompanhe a formação do hotspot no mapa.
+- Evite alertas isolados ou muito distantes entre si.
+
+![alt text](image.png)
+
+---
+
 ### Dispositivo Real
 
 - No dispositivo real, o app solicita permissão de localização automaticamente.
